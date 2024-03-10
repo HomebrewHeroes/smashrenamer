@@ -37,9 +37,9 @@
                 .then(data => {
                     // Populate character dropdown
                     var characterDropdown = document.getElementById('characterName');
-                    data.forEach(function(character) {
+                    data.characters.forEach(function(character) {
                         var option = document.createElement('option');
-                        option.value = character.codeName;
+                        option.value = character.code;
                         option.text = character.name;
                         characterDropdown.appendChild(option);
                     });
