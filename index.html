@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Smash Bros. Ultimate Character Name Modifier</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+    <h1>Super Smash Bros. Ultimate Character Name Modifier</h1>
+    
+    <form id="nameChangeForm">
+        <label for="characterName">Select the character:</label>
+        <select id="characterName" name="characterName" required>
+            <!-- Dropdown options will be dynamically populated -->
+        </select><br>
+        
+        <label for="costume">Select the costume:</label>
+        <select id="costume" name="costume" required>
+            <!-- Costume options will be dynamically populated -->
+        </select><br>
+        
+        <label for="newCharacterName">Enter the new character name:</label>
+        <input type="text" id="newCharacterName" name="newCharacterName" required><br>
+        
+        <button type="submit">Apply Changes</button>
+    </form>
+
+    <div id="result"></div>
+    <div id="console" style="border: 1px solid #ccc; padding: 10px; margin-top: 10px;"></div>
+
+    <script>
+        $(document).ready(function() {
+            // Fetch character data from GitHub
+            fetch('https://raw.githubusercontent.com/HomebrewHeroes/smashrenamer/main/characters.json')
+                .then(response => response.json())
+                .then(data => {
+                    // Populate character dropdown
+                    var characterDropdown = document.getElementById('characterName');
+                    data.forEach(function(character) {
+                        var option = document.createElement('option');
+                        option.value = character.codeName;
+                        option.text = character.name;
+                        characterDropdown.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching character data:', error));
+
+            // Populate costume dropdown
+            var costumeDropdown = document.getElementById('costume');
+            for (var i = 0; i < 8; i++) {
+                var option = document.createElement('option');
+                option.value = "c" + i.toString().padStart(2, '0');
+                option.text = "Costume " + i.toString().padStart(2, '0');
+                costumeDropdown.appendChild(option);
+            }
+
+            // Handle form submission
+            document.getElementById('nameChangeForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                var characterCodeName = document.getElementById('characterName').value;
+                var costume = document.getElementById('costume').value;
+                var newCharacterName = document.getElementById('newCharacterName').value;
+
+                // Log actions to console on the website
+                var consoleDiv = document.getElementById('console');
+                consoleDiv.innerHTML += "<p>Renaming " + characterCodeName + " " + costume + " to " + newCharacterName + "</p>";
+
+                // Function to modify PRCXML content
+                function modifyPRCXML(content) {
+                    // Modify the content according to the instructions
+                    // Replace character names and other placeholders with the new character name
+                    return content.replace(new RegExp(characterCodeName + "\\[" + costume + "\\]", "g"), newCharacterName);
+                }
+                
+                // Function to modify XMSBT content
+                function modifyXMSBT(content) {
+                    // Modify the content according to the instructions
+                    // Replace character names and other placeholders with the new character name
+                    return content.replace(new RegExp(characterCodeName + "\\[" + costume + "\\]", "g"), newCharacterName);
+                }
+                
+                // Fetch PRCXML content
+                fetch('https://raw.githubusercontent.com/HomebrewHeroes/smashrenamer/main/Template/Character/ui/param/database/ui_chara_db.prcxml', {
+                    headers: {
+                        'Content-Type': 'text/xml; charset=utf-8'
+                    }
+                })
+                .then(response => response.text())
+                .then(prcContent => {
+                    // Modify PRCXML content
+                    var modifiedPRCContent = modifyPRCXML(prcContent);
+                    
+                    // Log modified PRCXML content
+                    console.log("Modified PRCXML content:", modifiedPRCContent);
+                    
+                    // Fetch XMSBT content
+                    return fetch('https://raw.githubusercontent.com/HomebrewHeroes/smashrenamer/main/Template/Character/ui/message/msg_name.xmsbt', {
+                        headers: {
+                            'Content-Type': 'text/xml; charset=utf-8'
+                        }
+                    })
+                })
+                .then(response => response.text())
+                .then(xmsbtContent => {
+                    // Modify XMSBT content
+                    var modifiedXMSBTContent = modifyXMSBT(xmsbtContent);
+                    
+                    // Log modified XMSBT content
+                    console.log("Modified XMSBT content:", modifiedXMSBTContent);
+                    
+                    // Display the modified content in the result div
+                    document.getElementById('result').innerText = "Modified PRCXML content:\n" + modifiedPRCContent + "\n\nModified XMSBT content:\n" + modifiedXMSBTContent + "\n\nInstructions on how to apply to ARCropolis (Smash mod manager):\n1. Save the modified PRCXML content to 'ui_chara_db.prcxml'\n2. Save the modified XMSBT content to 'msg_name.xmsbt'\n3. Replace the original files in your mod folder with the modified ones\n4. Load your mod using ARCropolis\n5. Launch Super Smash Bros. Ultimate with ARCropolis enabled";
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
