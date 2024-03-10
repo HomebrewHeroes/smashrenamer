@@ -188,6 +188,7 @@
 
             // Function to export the renaming queue
             function exportQueue() {
+                console.log("Renaming Queue:", renameQueue); // Check the contents of the renameQueue array
                 var data = JSON.stringify(renameQueue, null, 2);
                 var blob = new Blob([data], { type: 'application/json' });
                 var url = URL.createObjectURL(blob);
