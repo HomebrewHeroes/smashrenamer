@@ -26,11 +26,19 @@
         <button type="submit">Apply Changes</button>
     </form>
 
+    <div id="queue">
+        <h2>Renaming Queue</h2>
+        <ul id="queueList"></ul>
+        <button id="exportButton">Export Queue</button>
+    </div>
+
     <div id="result"></div>
     <div id="console" style="border: 1px solid #ccc; padding: 10px; margin-top: 10px;"></div>
 
     <script>
         $(document).ready(function() {
+            var renameQueue = [];
+
             // Fetch character data from GitHub
             fetch('https://raw.githubusercontent.com/HomebrewHeroes/smashrenamer/main/characters.json')
                 .then(response => response.json())
@@ -67,56 +75,91 @@
                 var consoleDiv = document.getElementById('console');
                 consoleDiv.innerHTML += "<p>Renaming " + characterCodeName + " " + costume + " to " + newCharacterName + "</p>";
 
-                // Function to modify PRCXML content
-                function modifyPRCXML(content) {
-                    // Modify the content according to the instructions
-                    // Replace character names and other placeholders with the new character name
-                    return content.replace(new RegExp(characterCodeName + "\\[" + costume + "\\]", "g"), newCharacterName);
-                }
-                
-                // Function to modify XMSBT content
-                function modifyXMSBT(content) {
-                    // Modify the content according to the instructions
-                    // Replace character names and other placeholders with the new character name
-                    return content.replace(new RegExp(characterCodeName + "\\[" + costume + "\\]", "g"), newCharacterName);
-                }
-                
-                // Fetch PRCXML content
-                fetch('https://raw.githubusercontent.com/HomebrewHeroes/smashrenamer/main/Template/Character/ui/param/database/ui_chara_db.prcxml', {
-                    headers: {
-                        'Content-Type': 'text/xml; charset=utf-8'
-                    }
-                })
-                .then(response => response.text())
-                .then(prcContent => {
-                    // Modify PRCXML content
-                    var modifiedPRCContent = modifyPRCXML(prcContent);
-                    
-                    // Log modified PRCXML content
-                    console.log("Modified PRCXML content:", modifiedPRCContent);
-                    
-                    // Fetch XMSBT content
-                    return fetch('https://raw.githubusercontent.com/HomebrewHeroes/smashrenamer/main/Template/Character/ui/message/msg_name.xmsbt', {
-                        headers: {
-                            'Content-Type': 'text/xml; charset=utf-8'
-                        }
-                    })
-                })
-                .then(response => response.text())
-                .then(xmsbtContent => {
-                    // Modify XMSBT content
-                    var modifiedXMSBTContent = modifyXMSBT(xmsbtContent);
-                    
-                    // Log modified XMSBT content
-                    console.log("Modified XMSBT content:", modifiedXMSBTContent);
-                    
-                    // Display the modified content in the result div
-                    document.getElementById('result').innerText = "Modified PRCXML content:\n" + modifiedPRCContent + "\n\nModified XMSBT content:\n" + modifiedXMSBTContent + "\n\nInstructions on how to apply to ARCropolis (Smash mod manager):\n1. Save the modified PRCXML content to 'ui_chara_db.prcxml'\n2. Save the modified XMSBT content to 'msg_name.xmsbt'\n3. Replace the original files in your mod folder with the modified ones\n4. Load your mod using ARCropolis\n5. Launch Super Smash Bros. Ultimate with ARCropolis enabled";
-                })
-                .catch(error => {
-                    console.error('Error:', error);
+                // Add action to rename queue
+                renameQueue.push({
+                    character: characterCodeName,
+                    costume: costume,
+                    newName: newCharacterName
                 });
+
+                // Update queue display
+                updateQueueDisplay();
             });
+
+            // Function to update the display of the renaming queue
+            function updateQueueDisplay() {
+                var queueList = document.getElementById('queueList');
+                queueList.innerHTML = '';
+
+                renameQueue.forEach(function(item, index) {
+                    var li = document.createElement('li');
+                    li.textContent = item.character + ' ' + item.costume + ' -> ' + item.newName;
+
+                    // Add Edit button
+                    var editButton = document.createElement('button');
+                    editButton.textContent = 'Edit';
+                    editButton.dataset.index = index;
+                    editButton.addEventListener('click', function() {
+                        editQueueItem(index);
+                    });
+                    li.appendChild(editButton);
+
+                    // Add Remove button
+                    var removeButton = document.createElement('button');
+                    removeButton.textContent = 'Remove';
+                    removeButton.dataset.index = index;
+                    removeButton.addEventListener('click', function() {
+                        removeQueueItem(index);
+                    });
+                    li.appendChild(removeButton);
+
+                    queueList.appendChild(li);
+                });
+            }
+
+            // Function to edit a queue item
+            function editQueueItem(index) {
+                var item = renameQueue[index];
+                var character = prompt('Enter the new character code:', item.character);
+                var costume = prompt('Enter the new costume:', item.costume);
+                var newName = prompt('Enter the new name:', item.newName);
+
+                if (character && costume && newName) {
+                    renameQueue[index] = {
+                        character: character,
+                        costume: costume,
+                        newName: newName
+                    };
+
+                    updateQueueDisplay();
+                }
+            }
+
+            // Function to remove a queue item
+            function removeQueueItem(index) {
+                renameQueue.splice(index, 1);
+                updateQueueDisplay();
+            }
+
+            // Handle export button click
+            document.getElementById('exportButton').addEventListener('click', function() {
+                exportQueue();
+            });
+
+            // Function to export the renaming queue
+            function exportQueue() {
+                var data = JSON.stringify(renameQueue, null, 2);
+                var blob = new Blob([data], { type: 'application/json' });
+                var url = URL.createObjectURL(blob);
+
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'rename_queue.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
         });
     </script>
 </body>
