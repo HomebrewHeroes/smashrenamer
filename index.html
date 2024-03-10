@@ -71,6 +71,18 @@
                 var costume = document.getElementById('costume').value;
                 var newCharacterName = document.getElementById('newCharacterName').value;
 
+                // Check if the selected costume is already in the queue
+                var replaceIndex = renameQueue.findIndex(item => item.costume === costume);
+                if (replaceIndex !== -1) {
+                    var replaceConfirm = confirm("There is already an item in the queue with the same costume. Do you want to replace it?");
+                    if (replaceConfirm) {
+                        console.log("Replacing item in queue: " + renameQueue[replaceIndex].character + " " + renameQueue[replaceIndex].costume);
+                        renameQueue.splice(replaceIndex, 1);
+                    } else {
+                        return; // Do nothing if cancel is clicked
+                    }
+                }
+
                 // Log actions to console on the website
                 var consoleDiv = document.getElementById('console');
                 consoleDiv.innerHTML += "<p>Renaming " + characterCodeName + " " + costume + " to " + newCharacterName + "</p>";
@@ -110,6 +122,7 @@
 
             // Function to remove a queue item
             function removeQueueItem(index) {
+                console.log("Removing item from queue: " + renameQueue[index].character + " " + renameQueue[index].costume);
                 renameQueue.splice(index, 1);
                 updateQueueDisplay();
             }
