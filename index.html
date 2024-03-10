@@ -6,51 +6,83 @@
     <title>Super Smash Bros. Ultimate Character Name Modifier</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/HomebrewHeroes/smashrenamer/style.css">
+    <style>
+        #characterBox {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px; /* Add margin to the bottom of the character box */
+        }
+
+        #characterDropdowns {
+            flex: 1;
+            margin-right: 20px; /* Add margin to the right of the dropdowns */
+        }
+
+        #characterPortraitContainer {
+            margin-top: 10px; /* Add margin to the top of the portrait container */
+        }
+
+        #characterPortrait {
+            width: 150px; /* Adjust the width as needed */
+            height: auto;
+            margin-left: 20px; /* Add margin to the left of the portrait */
+        }
+    </style>
 </head>
 <body>
     <h1>Super Smash Bros. Ultimate Character Name Modifier</h1>
     
-    <form id="nameChangeForm">
-        <label for="characterName">Select the character:</label>
-        <select id="characterName" name="characterName" required>
-            <!-- Dropdown options will be dynamically populated -->
-        </select><br>
-        
-        <label for="costume">Select the costume:</label>
-        <select id="costume" name="costume" required>
-            <!-- Costume options will be dynamically populated -->
-        </select><br>
-        
-        <label for="newCharacterName">Enter the new character name:</label>
-        <input type="text" id="newCharacterName" name="newCharacterName" required><br>
-        
-        <button type="submit">Apply Changes</button>
-    </form>
+    <div id="characterBox">
+        <div id="characterDropdowns">
+            <form id="nameChangeForm">
+                <label for="characterName">Select the character:</label>
+                <select id="characterName" name="characterName" required>
+                    <!-- Dropdown options will be dynamically populated -->
+                </select><br>
+                
+                <label for="costume">Select the costume:</label>
+                <select id="costume" name="costume" required>
+                    <!-- Costume options will be dynamically populated -->
+                </select><br>
+                
+                <label for="newCharacterName">Enter the new character name:</label>
+                <input type="text" id="newCharacterName" name="newCharacterName" required><br>
+                
+                <button type="submit">Apply Changes</button>
+            </form>
 
-    <div id="queue">
-        <h2>Renaming Queue</h2>
-        <ul id="queueList"></ul>
-        <button id="exportButton">Export Queue</button>
+            <div id="queue">
+                <h2>Renaming Queue</h2>
+                <ul id="queueList"></ul>
+                <button id="exportButton">Export Queue</button>
+            </div>
+
+            <div id="result"></div>
+            <div id="console" style="border: 1px solid #ccc; padding: 10px; margin-top: 10px;"></div>
+        </div>
+
+        <div id="characterPortraitContainer">
+            <img id="characterPortrait" src="" alt="Character Portrait">
+        </div>
     </div>
-
-    <div id="result"></div>
-    <div id="console" style="border: 1px solid #ccc; padding: 10px; margin-top: 10px;"></div>
 
     <script>
         $(document).ready(function() {
             var renameQueue = [];
+            var charactersMap = {}; // Store character names and corresponding code names
 
             // Fetch character data from GitHub
             fetch('https://raw.githubusercontent.com/HomebrewHeroes/smashrenamer/main/characters.json')
                 .then(response => response.json())
                 .then(data => {
-                    // Populate character dropdown
+                    // Populate character dropdown and store character names and codes
                     var characterDropdown = document.getElementById('characterName');
                     data.characters.forEach(function(character) {
                         var option = document.createElement('option');
                         option.value = character.code;
                         option.text = character.name;
                         characterDropdown.appendChild(option);
+                        charactersMap[character.name] = character.code; // Store character name and code
                     });
                 })
                 .catch(error => console.error('Error fetching character data:', error));
@@ -59,10 +91,31 @@
             var costumeDropdown = document.getElementById('costume');
             for (var i = 0; i < 8; i++) {
                 var option = document.createElement('option');
-                option.value = "c" + i.toString().padStart(2, '0');
-                option.text = "Costume " + i.toString().padStart(2, '0');
+                var costumeNumber = i.toString().padStart(2, '0');
+                option.value = costumeNumber;
+                option.text = "Costume " + costumeNumber;
                 costumeDropdown.appendChild(option);
             }
+
+            // Function to update the character portrait
+            function updateCharacterPortrait(characterName, costume) {
+                var characterPortrait = document.getElementById('characterPortrait');
+                characterPortrait.src = `https://raw.githubusercontent.com/HomebrewHeroes/smashrenamer/main/assets/Stock%20Icons/chara_2_${characterName}_${costume}.png`;
+            }
+
+            // Handle character selection change
+            document.getElementById('characterName').addEventListener('change', function() {
+                var selectedCharacterName = this.value;
+                var selectedCostume = document.getElementById('costume').value;
+                updateCharacterPortrait(selectedCharacterName, selectedCostume);
+            });
+
+            // Handle costume selection change
+            document.getElementById('costume').addEventListener('change', function() {
+                var selectedCharacterName = document.getElementById('characterName').value;
+                var selectedCostume = this.value;
+                updateCharacterPortrait(selectedCharacterName, selectedCostume);
+            });
 
             // Handle form submission
             document.getElementById('nameChangeForm').addEventListener('submit', function(event) {
