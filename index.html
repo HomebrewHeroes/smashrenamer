@@ -95,15 +95,6 @@
                     var li = document.createElement('li');
                     li.textContent = item.character + ' ' + item.costume + ' -> ' + item.newName;
 
-                    // Add Edit button
-                    var editButton = document.createElement('button');
-                    editButton.textContent = 'Edit';
-                    editButton.dataset.index = index;
-                    editButton.addEventListener('click', function() {
-                        editQueueItem(index);
-                    });
-                    li.appendChild(editButton);
-
                     // Add Remove button
                     var removeButton = document.createElement('button');
                     removeButton.textContent = 'Remove';
@@ -115,24 +106,6 @@
 
                     queueList.appendChild(li);
                 });
-            }
-
-            // Function to edit a queue item
-            function editQueueItem(index) {
-                var item = renameQueue[index];
-                var character = prompt('Enter the new character code:', item.character);
-                var costume = prompt('Enter the new costume:', item.costume);
-                var newName = prompt('Enter the new name:', item.newName);
-
-                if (character && costume && newName) {
-                    renameQueue[index] = {
-                        character: character,
-                        costume: costume,
-                        newName: newName
-                    };
-
-                    updateQueueDisplay();
-                }
             }
 
             // Function to remove a queue item
